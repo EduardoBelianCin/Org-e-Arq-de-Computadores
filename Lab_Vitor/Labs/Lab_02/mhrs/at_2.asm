@@ -1,7 +1,7 @@
 lw x10, a
 lw x11, b
 add x12, x10, x0
-sw x10, m
+sw x12, m
 
 blt x11, x12, less
 beq x0, x0, else1
