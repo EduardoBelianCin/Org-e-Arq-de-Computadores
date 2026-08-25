@@ -8,6 +8,3 @@ loop1:
     jal x1, loop1 # volta pro começo do loop
 end1:
 halt
-
-
-	

@@ -30,5 +30,3 @@ g: .word 2
 h: .word 3
 i: .word 4
 j: .word 5
-
-
