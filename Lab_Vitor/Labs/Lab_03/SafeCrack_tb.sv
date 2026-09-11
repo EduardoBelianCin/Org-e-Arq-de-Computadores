@@ -1,17 +1,11 @@
 // =============================================================================
-// button_fsm_tb.sv
-// Testbench para button_fsm.sv
-//
-// Simula:
-//   [1] Reset inicial
-//   [2] Varios pressionamentos do botao (verifica avanco de estados)
-//   [3] Volta ao estado S0 apos 4 pressionamentos (ciclo completo)
-//   [4] Segurar o botao pressionado (verifica que nao avanca mais de 1 vez)
+// SafeCrack_tb.sv
+// Testbench para SafeCrack.sv
 // =============================================================================
 
 `timescale 1ns/1ps
 
-module button_fsm_tb;
+module SafeCrack_tb;
 
     // -------------------------------------------------------------------------
     // Sinais de estimulo e observacao
@@ -19,16 +13,18 @@ module button_fsm_tb;
     logic       clk;
     logic       rst_n;
     logic [3:0] btn;
-    logic [3:0] leds;
+    logic       unlocked;
+    logic [4:0] leds;
 
     // -------------------------------------------------------------------------
     // Instancia do DUT (Device Under Test)
     // -------------------------------------------------------------------------
-    button_fsm dut (
-        .clk   (clk),
-        .rst_n (rst_n),
-        .btn   (btn),
-        .leds  (leds)
+    SafeCrack dut (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .btn      (btn),
+        .unlocked (unlocked),
+        .leds     (leds)
     );
 
     // -------------------------------------------------------------------------
@@ -38,43 +34,45 @@ module button_fsm_tb;
     always #10 clk = ~clk;
 
     // -------------------------------------------------------------------------
-    // Task: pressiona o botao por alguns ciclos e solta
-    //   - btn e ativo baixo na placa, mas aqui simulamos como ativo baixo:
-    //     btn = 0 quando pressionado, btn = 1 quando solto
-    //   - hold_cycles: quantos ciclos o botao fica pressionado
+    // Task: pressiona um botao por alguns ciclos e solta
     // -------------------------------------------------------------------------
-    task press_button(input int btn_idx, input int hold_cycles);
+    task press_button(input logic [3:0] button_code, input int hold_cycles);
         @(negedge clk);
-        btn[btn_idx] = 1'b0;
+        btn = button_code;
         repeat (hold_cycles) @(posedge clk);
         @(negedge clk);
-        btn[btn_idx] = 1'b1;
+        btn = 4'b0000;
         repeat (3) @(posedge clk);
     endtask
 
     // -------------------------------------------------------------------------
-    // Task: verifica o estado dos LEDs e imprime resultado
+    // Task: verifica LEDs de estado e saida unlocked
     // -------------------------------------------------------------------------
-    task check_state(input logic [3:0] expected, input string msg);
+    task check_state(
+        input logic [4:0] expected_leds,
+        input logic       expected_unlocked,
+        input string      msg
+    );
         @(negedge clk);
-        if (leds === expected)
-            $display("[PASS] %s | leds = 4'b%04b", msg, leds);
+        if ((leds === expected_leds) && (unlocked === expected_unlocked))
+            $display("[PASS] %s | leds = 5'b%05b | unlocked = %b",
+                     msg, leds, unlocked);
         else
-            $display("[FAIL] %s | esperado = 4'b%04b, obtido = 4'b%04b",
-                     msg, expected, leds);
+            $display("[FAIL] %s | leds esperado = 5'b%05b, obtido = 5'b%05b | unlocked esperado = %b, obtido = %b",
+                     msg, expected_leds, leds, expected_unlocked, unlocked);
     endtask
 
     // -------------------------------------------------------------------------
     // Sequencia de testes
     // -------------------------------------------------------------------------
-initial begin
-        // Dump de formas de onda para visualizacao no GTKWave
-        $dumpfile("button_fsm.vcd");
-        $dumpvars(0, button_fsm_tb);
+    initial begin
+        // Dump de formas de onda para visualizacao no GTKWave/ModelSim
+        $dumpfile("SafeCrack.vcd");
+        $dumpvars(0, SafeCrack_tb);
 
         // Condicao inicial
         rst_n = 1'b1;
-        btn   = 4'b1111;  // Botoes soltos (ativo baixo, entao 1 = solto)
+        btn   = 4'b0000;
 
         // ------------------------------------------------------------------
         // Teste 1: Reset
@@ -84,49 +82,63 @@ initial begin
         repeat (3) @(posedge clk);
         rst_n = 1'b1;
         @(posedge clk);
-        check_state(4'b0001, "Apos reset -> S0");
+        check_state(5'b00001, 1'b0, "Apos reset -> INICIO");
 
         // ------------------------------------------------------------------
-        // Teste 2: Sequencia Correta (S0 -> S1 -> S2 -> S3 / Unlock)
+        // Teste 2: Sequencia correta (Azul -> Amarelo -> Amarelo -> Vermelho)
         // ------------------------------------------------------------------
-        $display("\n=== Teste 2: Sequencia Correta de Abrir o Cofre ===");
-        
-        press_button(0, 2);
-        check_state(4'b0010, "1o Botao correto -> S1");
+        $display("\n=== Teste 2: Sequencia correta de abrir o cofre ===");
 
-        press_button(1, 2);
-        check_state(4'b0100, "2o Botao correto -> S2");
+        press_button(4'b0001, 2);
+        check_state(5'b00010, 1'b0, "Azul correto -> AZUL_1");
 
-        press_button(3, 2);
-        check_state(4'b1000, "3o Botao correto -> S3 (UNLOCKED)");
+        press_button(4'b0010, 2);
+        check_state(5'b00100, 1'b0, "1o Amarelo correto -> AMARELO_2");
+
+        press_button(4'b0010, 2);
+        check_state(5'b01000, 1'b0, "2o Amarelo correto -> AMARELO_3");
+
+        press_button(4'b1000, 2);
+        check_state(5'b10000, 1'b1, "Vermelho correto -> DESBLOQUEIO");
 
         // ------------------------------------------------------------------
-        // Teste 3: Botao segurado nao deve avancar mais de 1 estado
+        // Teste 3: Botao segurado nao deve avancar mais de uma vez
         // ------------------------------------------------------------------
-        $display("\n=== Teste 3: Botao segurado no estado Unlock ===");
-        press_button(3, 20); // Segura por 20 ciclos
-        check_state(4'b1000, "Botao mantido pressionado -> Continua em UNLOCKED");
+        $display("\n=== Teste 3: Botao segurado ===");
+        rst_n = 1'b0;
+        repeat (2) @(posedge clk);
+        rst_n = 1'b1;
+        @(negedge clk);
+        btn = 4'b0001;
+        repeat (20) @(posedge clk);
+        @(negedge clk);
+        btn = 4'b0000;
+        repeat (3) @(posedge clk);
+        check_state(5'b00010, 1'b0, "Azul mantido pressionado -> apenas AZUL_1");
 
         // ------------------------------------------------------------------
         // Teste 4: Reset apos desbloqueio
         // ------------------------------------------------------------------
         $display("\n=== Teste 4: Reset para fechar o cofre ===");
+        press_button(4'b0010, 2);
+        press_button(4'b0010, 2);
+        press_button(4'b1000, 2);
+        check_state(5'b10000, 1'b1, "Cofre desbloqueado antes do reset");
         rst_n = 1'b0;
         repeat (2) @(posedge clk);
         rst_n = 1'b1;
         @(posedge clk);
-        check_state(4'b0001, "Reset em UNLOCKED -> Retorna para S0 (Bloqueado)");
+        check_state(5'b00001, 1'b0, "Reset em DESBLOQUEIO -> INICIO");
 
         // ------------------------------------------------------------------
-        // Teste 5: Sequencia Incorreta (Errar botão reseta FSM)
+        // Teste 5: Sequencia incorreta reinicia a FSM
         // ------------------------------------------------------------------
-        $display("\n=== Teste 5: Sequencia Incorreta (Erro reseta FSM) ===");
-        
-        press_button(0, 2); // Botão 1 correto -> S1
-        check_state(4'b0010, "1o Botao correto -> Avanca para S1");
+        $display("\n=== Teste 5: Sequencia incorreta ===");
+        press_button(4'b0001, 2);
+        check_state(5'b00010, 1'b0, "Azul correto -> AZUL_1");
 
-        press_button(2, 2); // Botão INCORRETO (Esperava 1, recebeu 2)
-        check_state(4'b0001, "Botao incorreto pressionado -> Voltou para S0");
+        press_button(4'b0100, 2);
+        check_state(5'b00001, 1'b0, "Verde incorreto -> INICIO");
 
         $display("\n=== Simulacao concluida ===\n");
         $finish;
