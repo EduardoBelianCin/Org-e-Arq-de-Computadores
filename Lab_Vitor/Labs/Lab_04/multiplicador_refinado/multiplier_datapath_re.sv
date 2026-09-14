@@ -14,7 +14,7 @@
 //   product_wr — habilita a escrita do resultado da ALU em product_reg
 //   shift_en   — desloca multiplicand_reg a esquerda e multiplier_reg a direita
 
-module multiplier_datapath (
+module multiplier_datapath_re (
     input  logic        clk,
     input  logic        rst_n,
 
@@ -28,7 +28,7 @@ module multiplier_datapath (
     input  logic        shift_en,    // Shift left em multiplicand, shift right em multiplier
 
     // Saidas de status para a FSM
-    output logic        multiplier_lsb, // Bit 0 do registrador multiplier (testa Multiplier0)
+    output logic        multiplier_lsb, // Bit 0 do registrador product, serve para saber o bit atual
 
     // Saída do resultado
     output logic [63:0] product
@@ -37,50 +37,42 @@ module multiplier_datapath (
     // -----------------------------------------------------------------------
     // Registradores internos (Figura 3.4)
     // -----------------------------------------------------------------------
-    logic [31:0] multiplicand_reg;
-    logic [63:0] product_reg;   
-
-    // -----------------------------------------------------------------------
-    // ALU (Figura 3.3 — "64-bit ALU")
-    // -----------------------------------------------------------------------
-    logic [31:0] alu_sum;
+    logic [64:0] product_reg; // Produto com carry-out
+    logic [31:0] multiplicand_reg;  
+    logic [32:0] alu_sum; // 33 bits para o carry out da soma 
 
     alu_32 alu (
-        .a   (product_reg),
+        .a   (product_reg[63:32]),
         .b   (multiplicand_reg),
-        .sum (alu_sum)
+        .sum (alu_sum[31:0])
     );
 
-    // -----------------------------------------------------------------------
-    // Saídas combinacionais
-    // -----------------------------------------------------------------------
-    assign multiplier_lsb = multiplier_reg[0];
-    assign product        = product_reg;
+    assign multiplier_lsb = product_reg[0];
+    assign product        = product_reg[63:0];
+    assign alu_sum[32] = {1'b0, product_reg[63:32]} + {1'b0, multiplicand_reg};
 
     // -----------------------------------------------------------------------
     // Atualizacao dos registradores
     // -----------------------------------------------------------------------
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            multiplicand_reg <= '0;
             product_reg      <= '0;
+            multiplicand_reg <= '0;
 
         end else if (load) begin
             // Inicializacao conforme Figura 3.4:
             // Multiplicand -> bits [31:0], bits [63:32] = 0
-            multiplicand_reg <= {0'b0, multiplicand_in};
-            product_reg   <= {32'b0, multiplier_in};
-            product_reg      <= '0;
+            multiplicand_reg <= multiplicand_in;
+            product_reg   <= {33'b0, multiplier_in};
 
         end else begin
             // Passo 1 (Figura 3.4): Product = Product + Multiplicand (se habilitado)
             if (product_wr)
-                product_reg <= {alu_sum, product_reg[31:0]};
+                product_reg[64:32]  <= alu_sum;
 
             // Passos 2 e 3 (Figura 3.4): deslocamentos
             if (shift_en) begin
-                multiplicand_reg <= {multiplicand_reg[30:0], 1'b0}; // shift left
-                product_reg   <= {1'b0, product_reg[63:1]};   // shift right (lógico)
+                product_reg   <= {1'b0, product_reg[64:1]};   // shift right (lógico)
             end
         end
     end

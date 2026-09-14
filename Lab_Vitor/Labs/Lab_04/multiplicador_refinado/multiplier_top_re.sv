@@ -11,7 +11,7 @@
 //   4. Ler o produto de 64 bits em 'product'
 //   5. Resetar 'start' para permitir nova operacao
 
-module multiplier_top (
+module multiplier_top_re (
     input  logic        clk,
     input  logic        rst_n,
 
@@ -34,7 +34,7 @@ module multiplier_top (
     // -----------------------------------------------------------------------
     // Instancia do datapath (Figura 3.3)
     // -----------------------------------------------------------------------
-    multiplier_datapath datapath (
+    multiplier_datapath_re datapath (
         .clk             (clk),
         .rst_n           (rst_n),
         .multiplicand_in (multiplicand_in),
@@ -49,7 +49,7 @@ module multiplier_top (
     // -----------------------------------------------------------------------
     // Instancia da FSM de controle (Figura 3.4)
     // -----------------------------------------------------------------------
-    multiplier_control control (
+    multiplier_control_re control (
         .clk             (clk),
         .rst_n           (rst_n),
         .start           (start),

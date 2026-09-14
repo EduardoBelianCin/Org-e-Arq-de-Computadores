@@ -3,7 +3,7 @@
 
 `timescale 1ns/1ps
 
-module multiplier_tb;
+module multiplier_tb_re;
 
     // -----------------------------------------------------------------------
     // Sinais
@@ -19,7 +19,7 @@ module multiplier_tb;
     // -----------------------------------------------------------------------
     // DUT
     // -----------------------------------------------------------------------
-    multiplier_top dut (
+    multiplier_top_re dut (
         .clk             (clk),
         .rst_n           (rst_n),
         .start           (start),

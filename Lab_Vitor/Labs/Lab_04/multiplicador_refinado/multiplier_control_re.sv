@@ -20,7 +20,7 @@
 //                  se count == 31 → DONE, caso contrario → ADD_OR_SKIP
 //   DONE         — sinaliza conclusao; retorna a IDLE quando 'start' for resetado
 
-module multiplier_control (
+module multiplier_control_re (
     input  logic clk,
     input  logic rst_n,
 
