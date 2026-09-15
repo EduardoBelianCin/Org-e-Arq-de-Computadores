@@ -1,0 +1,69 @@
+# Compile of data.hex failed with 1 errors.
+# Compile of program.hex failed with 1 errors.
+# Compile of sc_alu.sv was successful.
+# Compile of sc_alu_ctrl.sv was successful.
+# Compile of sc_control.sv was successful.
+# Compile of sc_cpu.sv was successful.
+# Compile of sc_cpu_tb.sv was successful.
+# Compile of sc_datapath.sv was successful.
+# Compile of sc_dmem.sv was successful.
+# Compile of sc_imem.sv was successful.
+# Compile of sc_regfile.sv was successful.
+# Compile of sc_sign_ext.sv was successful.
+# Compile of sc_top.sv was successful.
+# 13 compiles, 2 failed with 2 errors.
+vsim -gui work.sc_cpu_tb
+# vsim -gui work.sc_cpu_tb 
+# Start time: 11:33:27 on Sep 15,2026
+# Loading sv_std.std
+# Loading work.sc_cpu_tb
+# Loading work.sc_cpu
+# Loading work.sc_control
+# Loading work.sc_datapath
+# Loading work.sc_imem
+# Loading work.sc_regfile
+# Loading work.sc_sign_ext
+# Loading work.sc_alu_ctrl
+# Loading work.sc_alu
+# Loading work.sc_dmem
+add wave -position end sim:/sc_cpu_tb/dut/*
+run -all
+# [cycle   1] REG  x1  <= 00000005
+# [cycle   2] REG  x2  <= 00000003
+# [cycle   3] REG  x3  <= 00000008
+# [cycle   4] REG  x4  <= 00000002
+# [cycle   5] REG  x5  <= 00000001
+# [cycle   6] REG  x6  <= 00000007
+# [cycle   7] REG  x7  <= 00000001
+# [cycle   8] REG  x8  <= 00000000
+# [cycle   9] MEM  [word 02] <= 00000008
+# [cycle  10] MEM  [word 03] <= 00000002
+# [cycle  11] MEM  [word 04] <= 00000001
+# [cycle  12] MEM  [word 05] <= 00000007
+# [cycle  13] MEM  [word 06] <= 00000001
+# [cycle  14] MEM  [word 07] <= 00000000
+# [cycle  16] REG  x9  <= 00000008
+# 
+# === PASS: all 40 lines match ===
+# ** Note: $finish    : D:/Users/mhrs/Documents/Org-e-Arq-de-Computadores/Lab_Vitor/Labs/Lab_05/risc-v-single-cycle-processor-main/model/sc_cpu_tb.sv(178)
+#    Time: 450 ns  Iteration: 1  Instance: /sc_cpu_tb
+# 1
+# Break in Module sc_cpu_tb at D:/Users/mhrs/Documents/Org-e-Arq-de-Computadores/Lab_Vitor/Labs/Lab_05/risc-v-single-cycle-processor-main/model/sc_cpu_tb.sv line 178
+# Break key hit
+quit -sim
+# End time: 11:37:13 on Sep 15,2026, Elapsed time: 0:03:46
+# Errors: 0, Warnings: 5
+vsim -gui work.sc_cpu_tb
+# vsim -gui work.sc_cpu_tb 
+# Start time: 11:37:25 on Sep 15,2026
+# Loading sv_std.std
+# Loading work.sc_cpu_tb
+# Loading work.sc_cpu
+# Loading work.sc_control
+# Loading work.sc_datapath
+# Loading work.sc_imem
+# Loading work.sc_regfile
+# Loading work.sc_sign_ext
+# Loading work.sc_alu_ctrl
+# Loading work.sc_alu
+# Loading work.sc_dmem
