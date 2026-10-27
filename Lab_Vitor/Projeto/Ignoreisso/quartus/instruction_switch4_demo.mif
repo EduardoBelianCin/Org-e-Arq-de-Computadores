@@ -1,0 +1,39 @@
+-- Live switch-controlled RV32I arithmetic/logic demo for DE2-115
+-- SW[7:0]=A, SW[15:8]=B, SW[17:16]=op: 00 ADD, 01 SUB, 10 AND, 11 OR
+-- LEDR[17:0]=result (two's-complement low bits); LEDG[1:0]=op code
+DEPTH = 256;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+BEGIN
+
+000 : 40000093;  -- ADDI x1,x0,1024        MMIO base
+001 : 0000A103;  -- LW   x2,0(x1)           switches SW[17:0]
+002 : 0FF17193;  -- ANDI x3,x2,0xff        A = SW[7:0]
+003 : 00815213;  -- SRLI x4,x2,8
+004 : 0FF27213;  -- ANDI x4,x4,0xff        B = SW[15:8]
+005 : 01015293;  -- SRLI x5,x2,16
+006 : 0032F293;  -- ANDI x5,x5,3           op = SW[17:16]
+007 : 00000313;  -- ADDI x6,x0,0
+008 : 00628E63;  -- BEQ  x5,x6,ADD         op 00
+009 : 00100313;  -- ADDI x6,x0,1
+00A : 00628E63;  -- BEQ  x5,x6,SUB         op 01
+00B : 00200313;  -- ADDI x6,x0,2
+00C : 00628E63;  -- BEQ  x5,x6,AND         op 10
+00D : 0041E3B3;  -- OR   x7,x3,x4           op 11, default
+00E : 00000E63;  -- BEQ  x0,x0,WRITE        shared result output
+00F : 004183B3;  -- ADD  x7,x3,x4
+010 : 00000A63;  -- BEQ  x0,x0,WRITE
+011 : 404183B3;  -- SUB  x7,x3,x4
+012 : 00000663;  -- BEQ  x0,x0,WRITE
+013 : 0041F3B3;  -- AND  x7,x3,x4
+014 : 00000263;  -- BEQ  x0,x0,WRITE
+015 : 0070A423;  -- SW   x7,8(x1)           result -> red LEDs
+016 : 0050A623;  -- SW   x5,12(x1)          operation -> green LEDs
+017 : FA0004E3;  -- BEQ  x0,x0,LOOP         continuously sample switches
+
+[018..0FF] : 00000013;  -- NOP padding
+
+END;

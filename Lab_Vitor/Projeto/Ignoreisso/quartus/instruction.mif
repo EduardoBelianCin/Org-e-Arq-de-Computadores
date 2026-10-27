@@ -1,0 +1,133 @@
+-- Live DE2-115 switch program: all currently implemented operations.
+-- SW[4:0]=op, SW[10:5]=A, SW[16:11]=B. SW[17] is unused.
+-- See instruction_ops.txt for the operation codes and operand behavior.
+-- LEDR[17:0]=result low bits; LEDG[4:0]=operation code.
+DEPTH = 256;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+BEGIN
+
+000 : 40000093;  -- ADDI x1,x0,1024: MMIO base (set once)
+001 : 0000A103;  -- LW x2,0(x1): read SW[17:0]
+002 : 00515193;  -- SRLI x3,x2,5
+003 : 03F1F193;  -- ANDI x3,x3,0x3f: A=SW[10:5]
+004 : 00B15213;  -- SRLI x4,x2,11
+005 : 03F27213;  -- ANDI x4,x4,0x3f: B=SW[16:11]
+006 : 01F17293;  -- ANDI x5,x2,0x1f: operation=SW[4:0]
+007 : 01A19413;  -- SLLI x8,x3,26: prepare signed A
+008 : 41A45413;  -- SRAI x8,x8,26: sign-extend A
+009 : 01A21493;  -- SLLI x9,x4,26: prepare signed B
+00A : 41A4D493;  -- SRAI x9,x9,26: sign-extend B
+00B : 00221513;  -- SLLI x10,x4,2: byte address B*4 for LW/SW
+00C : 00000593;  -- ADDI x11,x0,0: select ADD
+00D : 0CB28263;  -- BEQ x5,x11,OP_ADD
+00E : 00100593;  -- ADDI x11,x0,1: select SUB
+00F : 0CB28263;  -- BEQ x5,x11,OP_SUB
+010 : 00200593;  -- ADDI x11,x0,2: select AND
+011 : 0CB28263;  -- BEQ x5,x11,OP_AND
+012 : 00300593;  -- ADDI x11,x0,3: select OR
+013 : 0CB28263;  -- BEQ x5,x11,OP_OR
+014 : 00400593;  -- ADDI x11,x0,4: select XOR
+015 : 0CB28263;  -- BEQ x5,x11,OP_XOR
+016 : 00500593;  -- ADDI x11,x0,5: select SLT
+017 : 0CB28263;  -- BEQ x5,x11,OP_SLT
+018 : 00600593;  -- ADDI x11,x0,6: select SLTU
+019 : 0CB28263;  -- BEQ x5,x11,OP_SLTU
+01A : 00700593;  -- ADDI x11,x0,7: select SLL
+01B : 0CB28263;  -- BEQ x5,x11,OP_SLL
+01C : 00800593;  -- ADDI x11,x0,8: select SRL
+01D : 0CB28263;  -- BEQ x5,x11,OP_SRL
+01E : 00900593;  -- ADDI x11,x0,9: select SRA
+01F : 0CB28263;  -- BEQ x5,x11,OP_SRA
+020 : 00A00593;  -- ADDI x11,x0,10: select ADDI
+021 : 0CB28263;  -- BEQ x5,x11,OP_ADDI
+022 : 00B00593;  -- ADDI x11,x0,11: select ANDI
+023 : 0CB28263;  -- BEQ x5,x11,OP_ANDI
+024 : 00C00593;  -- ADDI x11,x0,12: select ORI
+025 : 0CB28263;  -- BEQ x5,x11,OP_ORI
+026 : 00D00593;  -- ADDI x11,x0,13: select XORI
+027 : 0CB28263;  -- BEQ x5,x11,OP_XORI
+028 : 00E00593;  -- ADDI x11,x0,14: select SLTI
+029 : 0CB28263;  -- BEQ x5,x11,OP_SLTI
+02A : 00F00593;  -- ADDI x11,x0,15: select SLTIU
+02B : 0CB28263;  -- BEQ x5,x11,OP_SLTIU
+02C : 01000593;  -- ADDI x11,x0,16: select SLLI
+02D : 0CB28263;  -- BEQ x5,x11,OP_SLLI
+02E : 01100593;  -- ADDI x11,x0,17: select SRLI
+02F : 0CB28263;  -- BEQ x5,x11,OP_SRLI
+030 : 01200593;  -- ADDI x11,x0,18: select SRAI
+031 : 0CB28263;  -- BEQ x5,x11,OP_SRAI
+032 : 01300593;  -- ADDI x11,x0,19: select LUI
+033 : 0CB28263;  -- BEQ x5,x11,OP_LUI
+034 : 01400593;  -- ADDI x11,x0,20: select AUIPC
+035 : 0CB28263;  -- BEQ x5,x11,OP_AUIPC
+036 : 01500593;  -- ADDI x11,x0,21: select BEQ
+037 : 0CB28263;  -- BEQ x5,x11,OP_BEQ
+038 : 01600593;  -- ADDI x11,x0,22: select LW
+039 : 0CB28863;  -- BEQ x5,x11,OP_LW
+03A : 01700593;  -- ADDI x11,x0,23: select SW
+03B : 0CB28863;  -- BEQ x5,x11,OP_SW
+03C : 00000613;  -- Invalid operation -> result 0
+03D : 0C000A63;  -- BEQ x0,x0,WRITE
+03E : 009403B3;  -- ADD: signed A + signed B
+03F : 0C000663;  -- BEQ x0,x0,WRITE
+040 : 409413B3;  -- SUB: signed A - signed B
+041 : 0C000263;  -- BEQ x0,x0,WRITE
+042 : 0041F3B3;  -- AND: zero-extended A & B
+043 : 0A000E63;  -- BEQ x0,x0,WRITE
+044 : 0041E3B3;  -- OR: zero-extended A | B
+045 : 0A000A63;  -- BEQ x0,x0,WRITE
+046 : 0041C3B3;  -- XOR: zero-extended A ^ B
+047 : 0A000663;  -- BEQ x0,x0,WRITE
+048 : 009423B3;  -- SLT: signed A < signed B
+049 : 0A000263;  -- BEQ x0,x0,WRITE
+04A : 0041B3B3;  -- SLTU: unsigned A < B
+04B : 08000E63;  -- BEQ x0,x0,WRITE
+04C : 004193B3;  -- SLL: A << B[4:0]
+04D : 08000A63;  -- BEQ x0,x0,WRITE
+04E : 0041D3B3;  -- SRL: A >> B[4:0]
+04F : 08000663;  -- BEQ x0,x0,WRITE
+050 : 409453B3;  -- SRA: signed A >>> B[4:0]
+051 : 08000263;  -- BEQ x0,x0,WRITE
+052 : 00118393;  -- ADDI: signed A + 1
+053 : 06000E63;  -- BEQ x0,x0,WRITE
+054 : 01F1F393;  -- ANDI: A & 0x1f
+055 : 06000A63;  -- BEQ x0,x0,WRITE
+056 : 0011E393;  -- ORI: A | 1
+057 : 06000663;  -- BEQ x0,x0,WRITE
+058 : 0011C393;  -- XORI: A ^ 1
+059 : 06000263;  -- BEQ x0,x0,WRITE
+05A : 00142393;  -- SLTI: signed A < 1
+05B : 04000E63;  -- BEQ x0,x0,WRITE
+05C : 0011B393;  -- SLTIU: unsigned A < 1
+05D : 04000A63;  -- BEQ x0,x0,WRITE
+05E : 00119393;  -- SLLI: A << 1
+05F : 04000663;  -- BEQ x0,x0,WRITE
+060 : 0011D393;  -- SRLI: A >> 1
+061 : 04000263;  -- BEQ x0,x0,WRITE
+062 : 40145393;  -- SRAI: signed A >>> 1
+063 : 02000E63;  -- BEQ x0,x0,WRITE
+064 : 000013B7;  -- LUI x7,1 -> 0x1000
+065 : 02000A63;  -- BEQ x0,x0,WRITE
+066 : 00000397;  -- AUIPC x7,0 -> this instruction PC
+067 : 02000663;  -- BEQ x0,x0,WRITE
+068 : 00418663;  -- BEQ A,B,BEQ_TRUE
+069 : 00000393;  -- BEQ false -> result 0
+06A : 02000063;  -- BEQ x0,x0,WRITE
+06B : 00100393;  -- BEQ true -> result 1
+06C : 00000C63;  -- BEQ x0,x0,WRITE
+06D : 00052383;  -- LW x7,0(x10): load dmem[B]
+06E : 00000863;  -- BEQ x0,x0,WRITE
+06F : 00352023;  -- SW x3,0(x10): store A into dmem[B]
+070 : 00018393;  -- Return stored A as visible result
+071 : 00000263;  -- BEQ x0,x0,WRITE
+072 : 0070A423;  -- SW x7,8(x1): result -> red LEDs
+073 : 0050A623;  -- SW x5,12(x1): opcode -> green LEDs
+074 : E2000AE3;  -- Repeat and sample switches continuously
+
+[075..0FF] : 00000013;  -- NOP padding
+
+END;

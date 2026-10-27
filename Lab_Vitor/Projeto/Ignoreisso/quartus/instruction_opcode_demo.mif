@@ -1,0 +1,32 @@
+-- RV32I Etapa 02 opcode demonstration for the DE2-115 LEDs
+-- Red LEDs should show 0x1155; green LEDs should show 0x175.
+DEPTH = 256;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+BEGIN
+
+000 : 40000093;  -- ADDI x1,x0,1024       MMIO base
+001 : 05500113;  -- ADDI x2,x0,85
+002 : 00111193;  -- SLLI x3,x2,1          expected 170
+003 : 0011D193;  -- SRLI x3,x3,1          expected 85
+004 : 1001E213;  -- ORI  x4,x3,0x100      expected 0x155
+005 : 1FF27293;  -- ANDI x5,x4,0x1ff      expected 0x155
+006 : FF800313;  -- ADDI x6,x0,-8
+007 : 40135313;  -- SRAI x6,x6,1          expected -4
+008 : FFD32493;  -- SLTI x9,x6,-3         expected 1
+009 : 00849493;  -- SLLI x9,x9,8
+00A : 0554E493;  -- ORI  x9,x9,0x55       expected 0x155
+00B : 000013B7;  -- LUI  x7,1             expected 0x1000
+00C : 0053E3B3;  -- OR   x7,x7,x5         LEDR result 0x1155
+00D : 00000417;  -- AUIPC x8,0            instruction PC is 52
+00E : 00946433;  -- OR   x8,x8,x9         LEDG result 0x175
+00F : 0070A423;  -- SW   x7,8(x1)         write LEDR
+010 : 0080A623;  -- SW   x8,12(x1)        write LEDG
+011 : 00000063;  -- BEQ  x0,x0,0          halt
+
+[012..0FF] : 00000013;  -- NOP padding
+
+END;

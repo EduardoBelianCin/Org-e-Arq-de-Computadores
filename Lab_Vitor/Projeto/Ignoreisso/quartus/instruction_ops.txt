@@ -1,0 +1,33 @@
+Switch-controlled operation map (current pl_control/pl_alu_ctrl support):
+SW[10:5] = A, SW[16:11] = B, SW[4:0] = operation; SW[17] unused.
+A and B are interpreted as signed 6-bit values for signed arithmetic/comparisons;
+bitwise/unsigned operations use their zero-extended six-bit values.
+
+00: ADD
+01: SUB
+02: AND
+03: OR
+04: XOR
+05: SLT
+06: SLTU
+07: SLL
+08: SRL
+09: SRA
+10: ADDI
+11: ANDI
+12: ORI
+13: XORI
+14: SLTI
+15: SLTIU
+16: SLLI
+17: SRLI
+18: SRAI
+19: LUI
+20: AUIPC
+21: BEQ
+22: LW
+23: SW
+Immediate operation constants: ADDI +1, ANDI &0x1f, ORI |1, XORI ^1,
+SLTI/SLTIU compare against 1, shifts by 1. LUI uses immediate 1; AUIPC uses 0.
+LW/SW use word index B (byte address B*4); SW stores A and displays A.
+BEQ displays 1 when A==B, else 0.
