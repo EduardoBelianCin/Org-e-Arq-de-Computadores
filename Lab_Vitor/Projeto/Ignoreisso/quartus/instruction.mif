@@ -1,5 +1,6 @@
 -- Live DE2-115 switch program: all currently implemented operations.
--- SW[4:0]=op, SW[10:5]=A, SW[16:11]=B. SW[17] is unused.
+-- SW[4:0] is a demo operation ID (not the RISC-V opcode).
+-- SW[10:5]=A and SW[16:11]=B are signed 6-bit inputs; SW[17] is unused.
 -- See instruction_ops.txt for the operation codes and operand behavior.
 -- LEDR[17:0]=result low bits; LEDG[4:0]=operation code.
 DEPTH = 256;
@@ -92,7 +93,7 @@ BEGIN
 04F : 08000663;  -- BEQ x0,x0,WRITE
 050 : 409453B3;  -- SRA: signed A >>> B[4:0]
 051 : 08000263;  -- BEQ x0,x0,WRITE
-052 : 00118393;  -- ADDI: signed A + 1
+052 : 00140393;  -- ADDI: sign-extended A + 1
 053 : 06000E63;  -- BEQ x0,x0,WRITE
 054 : 01F1F393;  -- ANDI: A & 0x1f
 055 : 06000A63;  -- BEQ x0,x0,WRITE
@@ -121,8 +122,8 @@ BEGIN
 06C : 00000C63;  -- BEQ x0,x0,WRITE
 06D : 00052383;  -- LW x7,0(x10): load dmem[B]
 06E : 00000863;  -- BEQ x0,x0,WRITE
-06F : 00352023;  -- SW x3,0(x10): store A into dmem[B]
-070 : 00018393;  -- Return stored A as visible result
+06F : 00852023;  -- SW x8,0(x10): store sign-extended A into dmem[B]
+070 : 00040393;  -- Return stored A as visible result
 071 : 00000263;  -- BEQ x0,x0,WRITE
 072 : 0070A423;  -- SW x7,8(x1): result -> red LEDs
 073 : 0050A623;  -- SW x5,12(x1): opcode -> green LEDs

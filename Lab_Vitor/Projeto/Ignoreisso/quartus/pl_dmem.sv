@@ -8,7 +8,9 @@
 //
 // Leitura  : assincrona (combinatorial) -- disponivel no estagio MEM
 // Escrita  : sincrona (posedge clk, gated por MemWrite & ~mmio_sel)
-// Endereco : alu_result[9:2]  (endereco de palavra de 8 bits)
+// Endereco : alu_result[9:2] (palavra) + alu_result[1:0] (byte dentro da palavra)
+// Stores SB/SH/SW escrevem somente os bytes selecionados; halfwords devem estar
+// alinhados. Loads usam a palavra bruta e a extensao por funct3 no datapath.
 // =============================================================================
 
 `timescale 1ns / 1ps
@@ -17,6 +19,8 @@ module pl_dmem (
     input  logic        clk,
     input  logic        MemWrite,
     input  logic [7:0]  addr,
+    input  logic [1:0]  byte_offset,
+    input  logic [2:0]  funct3,
     input  logic [31:0] WriteData,
     output logic [31:0] ReadData
 );
@@ -30,8 +34,16 @@ module pl_dmem (
     end
     // synthesis translate_on
 
-    always@(posedge clk) begin
-        if (MemWrite) ram[addr] <= WriteData;
+    always_ff @(posedge clk) begin
+        if (MemWrite) begin
+            case (funct3)
+                3'b000: ram[addr][byte_offset*8 +: 8] <= WriteData[7:0]; // SB
+                3'b001: if (byte_offset[0] == 1'b0)
+                            ram[addr][byte_offset*8 +: 16] <= WriteData[15:0]; // SH
+                3'b010: ram[addr] <= WriteData; // SW
+                default: ;
+            endcase
+        end
     end
 
     assign ReadData = ram[addr];

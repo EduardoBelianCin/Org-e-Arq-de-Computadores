@@ -5,7 +5,8 @@
 // Decodifica o opcode de 7 bits (estagio ID) e gera os sinais de controle
 // que serao propagados pelos registradores de pipeline.
 //
-// Instructions: R-type, LW, SW, BEQ, OP-IMM, LUI, and AUIPC.
+// Instructions: RV32I integer operations, loads/stores, conditional branches,
+// JAL/JALR, LUI, and AUIPC.
 // =============================================================================
 
 `timescale 1ns / 1ps
@@ -18,6 +19,8 @@ module pl_control (
     output logic       MemRead,
     output logic       MemWrite,
     output logic       Branch,
+    output logic       Jump,
+    output logic       IsJALR,
     output logic       ALU_A_PC,
     output logic       ALU_A_ZERO,
     output logic [1:0] ALUOp
@@ -30,6 +33,8 @@ module pl_control (
     localparam OP_IMM = 7'b0010011;
     localparam LUI    = 7'b0110111;
     localparam AUIPC  = 7'b0010111;
+    localparam JAL    = 7'b1101111;
+    localparam JALR   = 7'b1100111;
 
     always_comb begin
         ALUSrc   = 1'b0;
@@ -38,6 +43,8 @@ module pl_control (
         MemRead  = 1'b0;
         MemWrite = 1'b0;
         Branch   = 1'b0;
+        Jump     = 1'b0;
+        IsJALR   = 1'b0;
         ALU_A_PC = 1'b0;
         ALU_A_ZERO = 1'b0;
         ALUOp    = 2'b00;
@@ -79,6 +86,15 @@ module pl_control (
                 ALUSrc = 1'b1;
                 RegWrite = 1'b1;
                 ALU_A_PC = 1'b1;
+            end
+            JAL: begin
+                RegWrite = 1'b1;
+                Jump = 1'b1;
+            end
+            JALR: begin
+                RegWrite = 1'b1;
+                Jump = 1'b1;
+                IsJALR = 1'b1;
             end
             default: ; // sinais permanecem em zero (seguro)
         endcase

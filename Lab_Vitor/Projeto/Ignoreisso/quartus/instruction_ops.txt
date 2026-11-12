@@ -1,7 +1,9 @@
-Switch-controlled operation map (current pl_control/pl_alu_ctrl support):
+Switch-controlled demo operation IDs (these are not RISC-V opcode bits):
 SW[10:5] = A, SW[16:11] = B, SW[4:0] = operation; SW[17] unused.
-A and B are interpreted as signed 6-bit values for signed arithmetic/comparisons;
-bitwise/unsigned operations use their zero-extended six-bit values.
+The six-bit values A and B use two's-complement representation for signed
+arithmetic/comparisons: 0..31 represent 0..31, and 32..63 represent -32..-1.
+The program sign-extends A to x8 and B to x9 before signed operations. Bitwise
+and unsigned operations use their zero-extended values in x3 and x4.
 
 00: ADD
 01: SUB
@@ -31,3 +33,7 @@ Immediate operation constants: ADDI +1, ANDI &0x1f, ORI |1, XORI ^1,
 SLTI/SLTIU compare against 1, shifts by 1. LUI uses immediate 1; AUIPC uses 0.
 LW/SW use word index B (byte address B*4); SW stores A and displays A.
 BEQ displays 1 when A==B, else 0.
+
+The instruction's actual seven-bit opcode is encoded in instruction.mif and
+decoded by pl_control.sv. For example, selector ID 01 dispatches to SUB, whose
+actual R-type opcode is 0110011; selector ID 01 is not that opcode.

@@ -27,6 +27,8 @@ package pl_pipe_pkg;
         logic        mem_write;
         logic [1:0]  alu_op;
         logic        branch;
+        logic        jump;
+        logic        jalr;
         logic        alu_a_pc;
         logic        alu_a_zero;
         // dados
