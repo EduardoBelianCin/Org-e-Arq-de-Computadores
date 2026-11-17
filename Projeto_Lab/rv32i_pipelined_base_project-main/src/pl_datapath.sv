@@ -30,12 +30,13 @@ module pl_datapath (
 
     // Sinais de controle vindos do estagio ID (pl_control)
     input  logic        ALUSrc,
+    input  logic        ALUSrcA_PC,
     input  logic        MemtoReg,
     input  logic        RegWrite,
     input  logic        MemRead,
     input  logic        MemWrite,
     input  logic        Branch,
-    input  logic [1:0]  ALUOp,
+    input  logic [2:0]  ALUOp,
 
     // Codigo de operacao da ALU (pl_alu_ctrl, usa campos do estagio EX)
     input  logic [3:0]  ALU_CC,
@@ -44,7 +45,7 @@ module pl_datapath (
     output logic [6:0]  Opcode,       // opcode do estagio ID (para pl_control)
     output logic [2:0]  Funct3_EX,    // funct3 do estagio EX (para pl_alu_ctrl)
     output logic [6:0]  Funct7_EX,    // funct7 do estagio EX (para pl_alu_ctrl)
-    output logic [1:0]  ALUOp_EX,     // ALUOp do estagio EX  (para pl_alu_ctrl)
+    output logic [2:0]  ALUOp_EX,     // ALUOp do estagio EX  (para pl_alu_ctrl)
 
     output logic [31:0] PC,           // PC atual (testbench / debug)
 
@@ -88,7 +89,7 @@ module pl_datapath (
 
     // EX -- forwarding
     logic [1:0]  fwd_a, fwd_b;
-    logic [31:0] fwd_srca, fwd_srcb, alu_srcb;
+    logic [31:0] fwd_srca, fwd_srcb, alu_srca, alu_srcb;
     logic [31:0] alu_result;
     logic        zero;
 
@@ -180,11 +181,12 @@ module pl_datapath (
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin                      // reset assicrono (unico sinal na lista)
             id_ex.alu_src    <= 1'b0;
+            id_ex.alu_src_a_pc <= 1'b0;
             id_ex.mem_to_reg <= 1'b0;
             id_ex.reg_write  <= 1'b0;
             id_ex.mem_read   <= 1'b0;
             id_ex.mem_write  <= 1'b0;
-            id_ex.alu_op     <= 2'b00;
+            id_ex.alu_op     <= 3'b000;
             id_ex.branch     <= 1'b0;
             id_ex.pc         <= 32'b0;
             id_ex.rd1        <= 32'b0;
@@ -197,11 +199,12 @@ module pl_datapath (
             id_ex.funct7     <= 7'b0;
         end else if (stall || pc_src) begin    // NOP sincrono: load-use ou branch
             id_ex.alu_src    <= 1'b0;
+            id_ex.alu_src_a_pc <= 1'b0;
             id_ex.mem_to_reg <= 1'b0;
             id_ex.reg_write  <= 1'b0;
             id_ex.mem_read   <= 1'b0;
             id_ex.mem_write  <= 1'b0;
-            id_ex.alu_op     <= 2'b00;
+            id_ex.alu_op     <= 3'b000;
             id_ex.branch     <= 1'b0;
             id_ex.pc         <= 32'b0;
             id_ex.rd1        <= 32'b0;
@@ -214,6 +217,7 @@ module pl_datapath (
             id_ex.funct7     <= 7'b0;
         end else begin
             id_ex.alu_src    <= ALUSrc;
+            id_ex.alu_src_a_pc <= ALUSrcA_PC;
             id_ex.mem_to_reg <= MemtoReg;
             id_ex.reg_write  <= RegWrite;
             id_ex.mem_read   <= MemRead;
@@ -269,11 +273,14 @@ module pl_datapath (
         endcase
     end
 
-    // Mux ALUSrc: imediato ou registrador
+    // Mux ALUSrcA: registrador com forwarding ou PC (AUIPC)
+    assign alu_srca = id_ex.alu_src_a_pc ? id_ex.pc : fwd_srca;
+
+    // Mux ALUSrcB: imediato ou registrador
     assign alu_srcb = id_ex.alu_src ? id_ex.imm_ext : fwd_srcb;
 
     pl_alu alu (
-        .SrcA      (fwd_srca),
+        .SrcA      (alu_srca),
         .SrcB      (alu_srcb),
         .Operation (ALU_CC),
         .ALUResult (alu_result),

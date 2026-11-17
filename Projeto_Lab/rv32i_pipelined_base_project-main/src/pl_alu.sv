@@ -11,6 +11,7 @@
 //   4'd07 : SLL  -- deslocamento logico a esquerda
 //   4'd08 : SRL  -- deslocamento logico a direita
 //   4'd09 : SRA  -- deslocamento aritmetico a direita
+//   4'd10 : COPY_B -- copia SrcB (usado por LUI)
 //   4'd11 : SLT  -- set-less-than com sinal
 //   4'd12 : SLTU -- set-less-than sem sinal
 // =============================================================================
@@ -35,6 +36,7 @@ module pl_alu (
             4'd07:   ALUResult = SrcA << SrcB[4:0];
             4'd08:   ALUResult = SrcA >> SrcB[4:0];
             4'd09:   ALUResult = $signed(SrcA) >>> SrcB[4:0];
+            4'd10:   ALUResult = SrcB;
             4'd11:   ALUResult = 32'($signed(SrcA) < $signed(SrcB));
             4'd12:   ALUResult = {31'b0, SrcA < SrcB};
             default: ALUResult = 32'b0;
