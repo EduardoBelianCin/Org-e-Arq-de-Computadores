@@ -8,7 +8,8 @@
 //
 // Leitura  : assincrona (combinatorial) -- disponivel no estagio MEM
 // Escrita  : sincrona (posedge clk, gated por MemWrite & ~mmio_sel)
-// Endereco : alu_result[9:2]  (endereco de palavra de 8 bits)
+//            suporta SB, SH e SW; acessos desalinhados nao sao suportados
+// Endereco : word_addr seleciona a palavra; byte_addr seleciona byte/halfword
 // =============================================================================
 
 `timescale 1ns / 1ps
@@ -16,7 +17,9 @@
 module pl_dmem (
     input  logic        clk,
     input  logic        MemWrite,
-    input  logic [7:0]  addr,
+    input  logic [7:0]  word_addr,
+    input  logic [1:0]  byte_addr,
+    input  logic [2:0]  Funct3,
     input  logic [31:0] WriteData,
     output logic [31:0] ReadData
 );
@@ -31,9 +34,26 @@ module pl_dmem (
     // synthesis translate_on
 
     always@(posedge clk) begin
-        if (MemWrite) ram[addr] <= WriteData;
+        if (MemWrite) begin
+            case (Funct3)
+                3'b000: begin  // SB
+                    case (byte_addr)
+                        2'b00: ram[word_addr][7:0]   <= WriteData[7:0];
+                        2'b01: ram[word_addr][15:8]  <= WriteData[7:0];
+                        2'b10: ram[word_addr][23:16] <= WriteData[7:0];
+                        2'b11: ram[word_addr][31:24] <= WriteData[7:0];
+                    endcase
+                end
+                3'b001: begin  // SH
+                    if (byte_addr[1]) ram[word_addr][31:16] <= WriteData[15:0];
+                    else              ram[word_addr][15:0]  <= WriteData[15:0];
+                end
+                3'b010: ram[word_addr] <= WriteData;  // SW
+                default: ;
+            endcase
+        end
     end
 
-    assign ReadData = ram[addr];
+    assign ReadData = ram[word_addr];
 
 endmodule

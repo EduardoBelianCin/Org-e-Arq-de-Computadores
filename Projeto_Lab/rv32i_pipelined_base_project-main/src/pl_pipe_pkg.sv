@@ -28,6 +28,9 @@ package pl_pipe_pkg;
         logic        mem_write;
         logic [2:0]  alu_op;
         logic        branch;
+        logic        jump;
+        logic        jump_reg;
+        logic        result_pc_plus4;
         // dados
         logic [31:0] pc;
         logic [31:0] rd1;       // saida 1 do banco de registradores
@@ -47,8 +50,10 @@ package pl_pipe_pkg;
         logic        reg_write;
         logic        mem_read;
         logic        mem_write;
+        logic        result_pc_plus4;
         // dados
         logic [31:0] alu_result;
+        logic [31:0] pc_plus4;
         logic [31:0] write_data;  // valor de rs2 apos forwarding (para SW)
         logic [4:0]  rd;
         logic [2:0]  funct3;
@@ -59,9 +64,11 @@ package pl_pipe_pkg;
         // sinais de controle
         logic        mem_to_reg;
         logic        reg_write;
+        logic        result_pc_plus4;
         // dados
         logic [31:0] alu_result;
         logic [31:0] read_data;   // dado lido da memoria (LW)
+        logic [31:0] pc_plus4;
         logic [4:0]  rd;
     } mem_wb_t;
 

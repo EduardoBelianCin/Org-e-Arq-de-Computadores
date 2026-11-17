@@ -13,6 +13,8 @@
 //   B-type  (1100011): beq
 //   U-type  (0110111): lui
 //   U-type  (0010111): auipc
+//   J-type  (1101111): jal
+//   I-type  (1100111): jalr
 //
 // Para operacoes com imediato, ALUSrc seleciona ImmExt como segundo operando.
 // AUIPC tambem ativa ALUSrcA_PC para selecionar o PC como primeiro operando.
@@ -29,6 +31,9 @@ module pl_control (
     output logic       MemRead,
     output logic       MemWrite,
     output logic       Branch,
+    output logic       Jump,
+    output logic       JumpReg,
+    output logic       ResultPCPlus4,
     output logic [2:0] ALUOp
 );
 
@@ -39,6 +44,8 @@ module pl_control (
     localparam BRANCH = 7'b1100011;
     localparam LUI    = 7'b0110111;
     localparam AUIPC  = 7'b0010111;
+    localparam JAL    = 7'b1101111;
+    localparam JALR   = 7'b1100111;
 
     always_comb begin
         ALUSrc   = 1'b0;
@@ -48,6 +55,9 @@ module pl_control (
         MemRead  = 1'b0;
         MemWrite = 1'b0;
         Branch   = 1'b0;
+        Jump     = 1'b0;
+        JumpReg  = 1'b0;
+        ResultPCPlus4 = 1'b0;
         ALUOp    = 3'b000;
 
         case (Opcode)
@@ -88,6 +98,19 @@ module pl_control (
                 ALUSrcA_PC = 1'b1;
                 RegWrite   = 1'b1;
                 ALUOp      = 3'b101;
+            end
+            JAL: begin
+                RegWrite      = 1'b1;
+                Jump          = 1'b1;
+                ResultPCPlus4 = 1'b1;
+            end
+            JALR: begin
+                ALUSrc        = 1'b1;
+                RegWrite      = 1'b1;
+                Jump          = 1'b1;
+                JumpReg       = 1'b1;
+                ResultPCPlus4 = 1'b1;
+                ALUOp         = 3'b000;
             end
             default: ; // sinais permanecem em zero (seguro)
         endcase
